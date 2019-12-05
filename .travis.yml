@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t makwingchi/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true makwingchi/react-test npm test
+
+after_success:
+  - docker build -t makwingchi/multi-client ./client
+  - docker build -t makwingchi/multi-nginx ./nginx
+  - docker build -t makwingchi/multi-server ./server
+  - docker build -t makwingchi/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push makwingchi/multi-client 
+  - docker push makwingchi/multi-nginx 
+  - docker push makwingchi/multi-server 
+  - docker push makwingchi/multi-worker
